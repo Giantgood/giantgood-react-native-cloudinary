@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Arrays;
 
 public class RNCloudinaryModule extends ReactContextBaseJavaModule {
 
@@ -71,11 +72,12 @@ public class RNCloudinaryModule extends ReactContextBaseJavaModule {
 
   @SuppressWarnings("unused")
   @ReactMethod
-  public void config(String cloudName, String apiKey, String secretKey, String presetName) {
+  public void config(String cloudName, String apiKey, String apiSecret, String presetName) {
     Map config = new HashMap();
     config.put("cloud_name", cloudName);
     config.put("api_key", apiKey);
-    config.put("api_secret", secretKey);
+    config.put("api_secret", apiSecret);
+
     this.mCloudinary = new Cloudinary(config);
     this.mPresetName = presetName;
     this.mConfig = config;
@@ -83,16 +85,24 @@ public class RNCloudinaryModule extends ReactContextBaseJavaModule {
 
   @SuppressWarnings("unused")
   @ReactMethod
-  public void uploadImage(String path, Promise promise) {
+  public void uploadImage(String path, String transformation, Promise promise) {
     final RNCloudinaryModule _this = this;
     _this.isResolved = false;
-    final Promise _promise = promise;
-    try {
 
+    final Promise _promise = promise;
+    
+    try {
       Uri myFileUri = Uri.parse(path);
       InputStream inputStream = this.reactContext.getContentResolver().openInputStream(myFileUri);
-      Map uploadResult = this.mCloudinary.uploader().unsignedUpload(inputStream, this.mPresetName, this.mConfig);
+
+      // merge config options with transformation passed to upload method
+      options = new HashMap<>();
+      options.putAll(this.mConfig);
+      options.put("transformation", transformation);
+
+      Map uploadResult = this.mCloudinary.uploader().upload(inputStream, this.mConfig);
       WritableMap res = RNCloudinaryModule.toWritableMap(uploadResult);
+      
       _promise.resolve(res);
       _this.isResolved = true;
     } catch (RuntimeException e) {
