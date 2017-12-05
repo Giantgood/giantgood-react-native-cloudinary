@@ -20,6 +20,15 @@
 #import “React/RCTEventDispatcher.h” // Required when used as a Pod in a Swift project
 #endif
 
+// import RCTLog
+#if __has_include(<React/RCTLog.h>)
+#import <React/RCTLog.h>
+#elif __has_include(“RCTLog.h”)
+#import “RCTLog.h”
+#else
+#import “React/RCTLog.h” // Required when used as a Pod in a Swift project
+#endif
+
 //Import libraries
 
 //#import "RNCloudinary-Bridging-Header.h"
@@ -46,7 +55,7 @@ RCT_EXPORT_METHOD(config:(NSString *)cloudName aPIKey:(NSString *)apiKey apiSecr
   self.presetName = presetName;
 }
 
-RCT_EXPORT_METHOD(uploadImage:(NSString *)path resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(uploadImage:(NSString *)path transformation:(NSString *)transformation resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSData *data = [NSData dataWithContentsOfFile:path];
   
@@ -54,26 +63,34 @@ RCT_EXPORT_METHOD(uploadImage:(NSString *)path resolver:(RCTPromiseResolveBlock)
     data = [[NSFileManager defaultManager] contentsAtPath:path];
   } else {
     NSString *code = @"No file";
-    NSString *message = @"File not exist.";
+    NSString *message = @"File does not exist.";
     NSError *error = [NSError errorWithDomain:@"RNCloudinary" code:0 userInfo:nil];
     reject(code, message, error);
   }
   
-  if (self.cloudinary) {
-    [[self.cloudinary createUploader] uploadWithData:data uploadPreset:self.presetName params:NULL progress:^(NSProgress * progress) {
-      
-    } completionHandler:^(CLDUploadResult * result, NSError * error) {
-      NSArray *keys = [NSArray arrayWithObjects:@"result", @"error", nil];
-      NSArray *objects = [NSArray arrayWithObjects:@"success", @"", nil];
-      NSDictionary *dictionary = [NSDictionary dictionaryWithObjects:objects
-                                                             forKeys:keys];
-      resolve(dictionary);
-    }];
-  } else {
-    NSString *code = @"not configured";
-    NSString *message = @"Cloudinary service is not configured correctly.";
-    NSError *error = [NSError errorWithDomain:@"RNCloudinary" code:0 userInfo:nil];
-    reject(code, message, error);
+    if (self.cloudinary) {
+      CLDUploadRequestParams *params = [[CLDUploadRequestParams alloc] init];
+
+      if (transformation) {
+        params = [params setTransformation:transformation];
+      }
+
+      [[self.cloudinary createUploader] signedUploadWithData:data params:params progress:^(NSProgress * progress) {
+          
+      } completionHandler:^(CLDUploadResult * result, NSError * error) {
+        if (error) {
+            NSString *code = @"Cloudinary error";
+            NSString *message = @"Cloudinary service returned an error.";
+            reject(code, message , error);
+        } else {
+            resolve([result resultJson]);
+        }
+      }];
+    } else {
+      NSString *code = @"not configured";
+      NSString *message = @"Cloudinary service is not configured correctly.";
+      NSError *error = [NSError errorWithDomain:@"RNCloudinary" code:0 userInfo:nil];
+      reject(code, message, error);
   }
 }
 

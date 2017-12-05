@@ -14,8 +14,8 @@ class Cloudinary {
     return RNCloudinary.config(cloudName, apiKey, apiSecret, presetName);
   }
 
-  uploadImage(uri) {
-    return RNCloudinary.uploadImage(uri)
+  uploadImage(uri, transformation) {
+    return RNCloudinary.uploadImage(uri, transformation)
   }
 
 }

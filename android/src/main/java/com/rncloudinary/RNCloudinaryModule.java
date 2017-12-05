@@ -5,6 +5,8 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.cloudinary.ProgressCallback;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -19,7 +21,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Arrays;
 
 public class RNCloudinaryModule extends ReactContextBaseJavaModule {
 
@@ -35,6 +39,32 @@ public class RNCloudinaryModule extends ReactContextBaseJavaModule {
     this.reactContext = reactContext;
   }
 
+  public static WritableMap toWritableMap(Map<String, Object> map) {
+    WritableMap writableMap = Arguments.createMap();
+    Iterator iterator = map.entrySet().iterator();
+
+    while (iterator.hasNext()) {
+      Map.Entry pair = (Map.Entry) iterator.next();
+      Object value = pair.getValue();
+
+      if (value == null) {
+        writableMap.putNull((String) pair.getKey());
+      } else if (value instanceof Boolean) {
+        writableMap.putBoolean((String) pair.getKey(), (Boolean) value);
+      } else if (value instanceof Double) {
+        writableMap.putDouble((String) pair.getKey(), (Double) value);
+      } else if (value instanceof Integer) {
+        writableMap.putInt((String) pair.getKey(), (Integer) value);
+      } else if (value instanceof String) {
+        writableMap.putString((String) pair.getKey(), (String) value);
+      }
+
+      iterator.remove();
+    }
+
+    return writableMap;
+  }
+
   @Override
   public String getName() {
     return "RNCloudinary";
@@ -42,11 +72,12 @@ public class RNCloudinaryModule extends ReactContextBaseJavaModule {
 
   @SuppressWarnings("unused")
   @ReactMethod
-  public void config(String cloudName, String apiKey, String secretKey, String presetName) {
+  public void config(String cloudName, String apiKey, String apiSecret, String presetName) {
     Map config = new HashMap();
     config.put("cloud_name", cloudName);
     config.put("api_key", apiKey);
-    config.put("api_secret", secretKey);
+    config.put("api_secret", apiSecret);
+
     this.mCloudinary = new Cloudinary(config);
     this.mPresetName = presetName;
     this.mConfig = config;
@@ -54,26 +85,26 @@ public class RNCloudinaryModule extends ReactContextBaseJavaModule {
 
   @SuppressWarnings("unused")
   @ReactMethod
-  public void uploadImage(String path, Promise promise) {
+  public void uploadImage(String path, String transformation, Promise promise) {
     final RNCloudinaryModule _this = this;
     _this.isResolved = false;
-    final Promise _promise = promise;
-    try {
 
+    final Promise _promise = promise;
+    
+    try {
       Uri myFileUri = Uri.parse(path);
       InputStream inputStream = this.reactContext.getContentResolver().openInputStream(myFileUri);
-      this.mCloudinary.uploader().unsignedUpload(inputStream, this.mPresetName, this.mConfig, new ProgressCallback() {
-        public void onProgress(long bytesUploaded, long totalBytes) {
-          if (bytesUploaded >= totalBytes) {
-            if (_this.isResolved == false) {
-              _promise.resolve("success");
-              _this.isResolved = true;
-            }
-          } else {
 
-          }
-        }
-      }) ;
+      // merge config options with transformation passed to upload method
+      Map options = new HashMap<>();
+      options.putAll(this.mConfig);
+      options.put("transformation", transformation);
+
+      Map uploadResult = this.mCloudinary.uploader().upload(inputStream, this.mConfig);
+      WritableMap res = RNCloudinaryModule.toWritableMap(uploadResult);
+      
+      _promise.resolve(res);
+      _this.isResolved = true;
     } catch (RuntimeException e) {
       String code = "Error";
       String message = "Error";
