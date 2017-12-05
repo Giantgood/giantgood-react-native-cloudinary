@@ -1,5 +1,5 @@
 {
-  "name": "react-native-cloudinary",
+  "name": "giantgood-react-native-cloudinary",
   "version": "1.1.0",
   "description": "React Native Wrapper for Cloudinary Service",
   "main": "index.js",
@@ -15,11 +15,18 @@
   "keywords": [
     "react-native"
   ],
-  "author": "Javier Catalan <jjangelo44@gmail.com> (https://github.com/javierrunning)",
+  "author": "Giantgood <developers@giantgood..com> (https://github.com/Giantgood)",
   "contributors": [
     {
       "name": "Javier Catalan",
       "email": "jjangelo44@gmail.com"
+    },
+    {
+      "name": "Kyle-ssg",
+    },
+    {
+      "name": "Matt Chandler",
+      "email": "matt@sierra-ancha.com"
     }
   ],
   "license": "MIT",
