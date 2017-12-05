@@ -96,7 +96,7 @@ public class RNCloudinaryModule extends ReactContextBaseJavaModule {
       InputStream inputStream = this.reactContext.getContentResolver().openInputStream(myFileUri);
 
       // merge config options with transformation passed to upload method
-      options = new HashMap<>();
+      Map options = new HashMap<>();
       options.putAll(this.mConfig);
       options.put("transformation", transformation);
 
