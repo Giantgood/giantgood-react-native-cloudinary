@@ -1,6 +1,6 @@
 {
   "name": "giantgood-react-native-cloudinary",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "React Native Wrapper for Cloudinary Service",
   "main": "index.js",
   "files": [
@@ -9,9 +9,6 @@
     "index.js",
     "react-native-ux-cam.podspec"
   ],
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [
     "react-native"
   ],
@@ -22,7 +19,7 @@
       "email": "jjangelo44@gmail.com"
     },
     {
-      "name": "Kyle-ssg",
+      "name": "Kyle-ssg"
     },
     {
       "name": "Matt Chandler",
@@ -48,6 +45,7 @@
     "react-native": "^0.41.2"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
